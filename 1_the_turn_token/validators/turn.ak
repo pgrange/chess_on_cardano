@@ -40,12 +40,18 @@ pub fn own_validator_script_address_hash(
 }
 
 fn turn_token_output(context, policy_id) -> Output {
-  expect Some(turn_output) =
-    list.find(
-      context.transaction.outputs,
-      fn(output) { value.quantity_of(output.value, policy_id, "turn") == 1 },
-    )
+  expect [turn_output] = outputs_with_turn_token(context, policy_id)
+  let turn_token_quantity =
+    value.quantity_of(turn_output.value, policy_id, "turn")
+  expect turn_token_quantity = 1
   turn_output
+}
+
+fn outputs_with_turn_token(context, policy_id) -> List<Output> {
+  list.filter(
+    context.transaction.outputs,
+    fn(output) { value.quantity_of(output.value, policy_id, "turn") > 0 },
+  )
 }
 
 fn paid_to_the_turn_contract(turn_contract, turn_output) {
