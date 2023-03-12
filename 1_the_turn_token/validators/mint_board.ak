@@ -1,8 +1,7 @@
-use aiken/bytearray
 use aiken/hash.{Blake2b_224, Hash}
 use aiken/list
-use aiken/transaction.{DatumHash, InlineDatum, Mint, Output, ScriptContext}
-use aiken/transaction/credential.{Script, VerificationKey}
+use aiken/transaction.{InlineDatum, Mint, Output, ScriptContext}
+use aiken/transaction/credential.{VerificationKey}
 use aiken/transaction/value.{PolicyId}
 
 type Redeemer {
@@ -11,6 +10,8 @@ type Redeemer {
 }
 
 type TurnDatum {
+  next_player: Hash<Blake2b_224, VerificationKey>,
+  other_player: Hash<Blake2b_224, VerificationKey>,
   policy_id: PolicyId,
 }
 
@@ -19,10 +20,12 @@ validator mint_board(turn_contract: ByteArray) {
     expect Mint(policy_id) = context.purpose
     let turn_output = turn_token_output(context, policy_id)
 
-    white_start_then_black(turn_output, redeemer) && paid_to_the_turn_contract(
+    let datum = turn_datum(turn_output)
+
+    white_start_then_black(datum, redeemer) && paid_to_the_turn_contract(
       turn_contract,
       turn_output,
-    ) && policy_id_in_datum(turn_output, policy_id)
+    ) && policy_id_in_datum(datum, policy_id)
   }
 }
 
@@ -45,15 +48,16 @@ fn paid_to_the_turn_contract(turn_contract, turn_output) {
   turn_output.address == credential.from_script(turn_contract)
 }
 
-fn white_start_then_black(turn_output, redeemer) {
-  expect DatumHash(players) = turn_output.datum
-  let expected_hash =
-    hash.blake2b_256(bytearray.concat(redeemer.white, redeemer.black))
-  expected_hash == players
+fn white_start_then_black(datum: TurnDatum, redeemer) {
+  datum.next_player == redeemer.white && datum.other_player == redeemer.black
 }
 
-fn policy_id_in_datum(turn_output, policy_id) {
+fn policy_id_in_datum(datum, policy_id) {
+  datum.policy_id == policy_id
+}
+
+fn turn_datum(turn_output) -> TurnDatum {
   expect InlineDatum(data) = turn_output.datum
   expect turn_datum: TurnDatum = data
-  turn_datum.policy_id == policy_id
+  turn_datum
 }
