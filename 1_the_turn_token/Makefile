@@ -6,7 +6,7 @@ turn_contract_title := turn.turn
 
 all: .parameterized
 
-plutus.json: validators/*.ak
+plutus.json: validators/*.ak lib/chess_on_cardano/*.ak
 	aiken build
 
 .parameterized: plutus.json
