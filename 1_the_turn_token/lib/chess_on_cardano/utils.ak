@@ -1,4 +1,3 @@
-use aiken/hash.{Blake2b_224, Hash}
 use aiken/list
 use aiken/transaction.{OutputReference, ScriptContext}
 use aiken/transaction/credential.{Address, ScriptCredential}
