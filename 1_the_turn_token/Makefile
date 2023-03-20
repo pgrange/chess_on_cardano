@@ -14,6 +14,9 @@ plutus.json: validators/*.ak lib/chess_on_cardano/*.ak
 	aiken blueprint apply -m mint_board.mint_board . '(con bytestring #$(turn_contract))'
 	@touch .parameterized
 
+%.sk:
+	deno run --allow-net --allow-read --allow-env --allow-write generate_key.ts $(basename $@)
+
 .PHONY: clean
 clean:
 	rm -f .parameterized plutus.json
